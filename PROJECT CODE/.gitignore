@@ -1,0 +1,47 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# MLflow
+mlruns/
+
+# Logs
+logs/
+*.log
+
+# Python
+MLOPS_PROJECT_1.egg-info/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# GCP Credentials - NEVER COMMIT THESE!
+gcp_credentials/
+*.json
+!gcp_credentials/.gitkeep
+!gcp_credentials/credentials_template.json
+
+# Artifacts
+artifacts/
+*.pkl
+*.joblib
+*.h5
+*.model
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
