@@ -17,7 +17,6 @@ import mlflow.sklearn
 logger = get_logger(__name__)
 
 class ModelTraining:
-
     def __init__(self,train_path,test_path,model_output_path):
         self.train_path = train_path
         self.test_path = test_path

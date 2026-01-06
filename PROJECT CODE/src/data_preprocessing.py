@@ -24,13 +24,29 @@ class DataProcessor:
             os.makedirs(self.processed_dir)
         
     
-    def preprocess_data(self,df):
+    def preprocess_data(self, df):
         try:
-            logger.info("Starting our Data Processing step")
-
-            logger.info("Dropping the columns")
-            df.drop(columns=['Unnamed: 0', 'Booking_ID'] , inplace=True)
+            logger.info("Starting Data Processing step")
+            logger.info(f"Initial shape: {df.shape}")
+            logger.info(f"Columns: {df.columns.tolist()}")
+            
+            columns_to_drop = []
+            if 'Unnamed: 0' in df.columns:
+                columns_to_drop.append('Unnamed: 0')
+            if 'Booking_ID' in df.columns:
+                columns_to_drop.append('Booking_ID')
+            
+            if columns_to_drop:
+                logger.info(f"Dropping columns: {columns_to_drop}")
+                df.drop(columns=columns_to_drop, inplace=True)
+            else:
+                logger.info("No columns to drop")
+            
+            # Remove duplicates
+            initial_rows = len(df)
             df.drop_duplicates(inplace=True)
+            duplicates_removed = initial_rows - len(df)
+            logger.info(f"Removed {duplicates_removed} duplicate rows")
 
             cat_cols = self.config["data_processing"]["categorical_columns"]
             num_cols = self.config["data_processing"]["numerical_columns"]
@@ -38,29 +54,43 @@ class DataProcessor:
             logger.info("Applying Label Encoding")
 
             label_encoder = LabelEncoder()
-            mappings={}
+            mappings = {}
 
             for col in cat_cols:
-                df[col] = label_encoder.fit_transform(df[col])
-                mappings[col] = {label:code for label,code in zip(label_encoder.classes_ , label_encoder.transform(label_encoder.classes_))}
+                if col in df.columns:
+                    df[col] = label_encoder.fit_transform(df[col])
+                    mappings[col] = {label: code for label, code in zip(label_encoder.classes_, label_encoder.transform(label_encoder.classes_))}
+                else:
+                    logger.warning(f"Column '{col}' not found in dataframe, skipping encoding")
 
-            logger.info("Label Mappings are : ")
-            for col,mapping in mappings.items():
-                logger.info(f"{col} : {mapping}")
+            logger.info("Label Mappings:")
+            for col, mapping in mappings.items():
+                logger.info(f"  {col}: {mapping}")
 
-            logger.info("Doing Skewness HAndling")
+            logger.info("Handling Skewness")
 
             skew_threshold = self.config["data_processing"]["skewness_threshold"]
-            skewness = df[num_cols].apply(lambda x:x.skew())
+            
+            # Only process numerical columns that exist in the dataframe
+            existing_num_cols = [col for col in num_cols if col in df.columns]
+            skewness = df[existing_num_cols].apply(lambda x: x.skew())
+            
+            logger.info(f"Skewness values:\n{skewness}")
 
-            for column in skewness[skewness>skew_threshold].index:
-                df[column] = np.log1p(df[column])
+            skewed_cols = skewness[skewness > skew_threshold].index.tolist()
+            if skewed_cols:
+                logger.info(f"Applying log transformation to skewed columns: {skewed_cols}")
+                for column in skewed_cols:
+                    df[column] = np.log1p(df[column])
+            else:
+                logger.info("No columns with high skewness found")
 
+            logger.info(f"Final shape after preprocessing: {df.shape}")
             return df
         
         except Exception as e:
-            logger.error(f"Error during preprocess step {e}")
-            raise CustomException("Error while preprocess data", e)
+            logger.error(f"Error during preprocess step: {e}")
+            raise CustomException("Error while preprocessing data", e)
         
     def balance_data(self,df):
         try:

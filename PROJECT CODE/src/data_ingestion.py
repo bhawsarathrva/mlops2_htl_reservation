@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-from google.cloud import storage
+import shutil
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 from src.logger import get_logger
 from src.custom_exception import CustomException
@@ -12,66 +13,103 @@ logger = get_logger(__name__)
 class DataIngestion:
     def __init__(self,config):
         self.config = config["data_ingestion"]
-        self.bucket_name = self.config["bucket_name"]
-        self.file_name = self.config["bucket_file_name"]
-        self.train_test_ratio = self.config["train_ratio"]
+        self.train_ratio = self.config["train_ratio"]
+        self.test_ratio = self.config["test_ratio"]
+        
+        # Create artifacts/raw directory if it doesn't exist
+        os.makedirs(RAW_DIR, exist_ok=True)
+        
+        # Path to local dataset
+        self.local_dataset_path = os.path.join(PROJECT_ROOT.parent, "DATASET", "Hotel Reservations.csv", "Hotel Reservations.csv")
+        
+        logger.info(f"Data Ingestion initialized")
+        logger.info(f"Local dataset path: {self.local_dataset_path}")
+        logger.info(f"Output directory: {RAW_DIR}")
+        logger.info(f"Train/Test split ratio: {self.train_ratio}/{self.test_ratio}")
 
-        os.makedirs(RAW_DIR , exist_ok=True)
-
-        logger.info(f"Data Ingestion started with {self.bucket_name} and file is {self.file_name}")
-
-    def download_csv_from_gcp(self):
+    def load_local_dataset(self):
+        """Load dataset from local DATASET folder and save as raw.csv"""
         try:
-            client = storage.Client()
-            bucket = client.bucket(self.bucket_name)
-            blob = bucket.blob(self.file_name)
-
-            blob.download_to_filename(RAW_FILE_PATH)
-
-            logger.info(f"CSV file is sucesfully downloaded to {RAW_FILE_PATH}")
-
+            logger.info(f"Loading dataset from: {self.local_dataset_path}")
+            
+            # Check if local dataset exists
+            if not os.path.exists(self.local_dataset_path):
+                raise FileNotFoundError(f"Dataset not found at: {self.local_dataset_path}")
+            
+            # Read the dataset
+            data = pd.read_csv(self.local_dataset_path)
+            logger.info(f"Dataset loaded successfully with shape: {data.shape}")
+            
+            # Save as raw.csv
+            data.to_csv(RAW_FILE_PATH, index=False)
+            logger.info(f"Raw data saved to: {RAW_FILE_PATH}")
+            
+            return data
+            
         except Exception as e:
-            logger.error("Error while downloading the csv file")
-            raise CustomException("Failed to downlaod csv file ", e)
-        
-    def split_data(self):
+            logger.error(f"Error while loading local dataset: {e}")
+            raise CustomException("Failed to load local dataset", e)
+    
+    def split_data(self, data):
+        """Split data into train (80%) and test (20%) sets"""
         try:
-            logger.info("Starting the splitting process")
-            data = pd.read_csv(RAW_FILE_PATH)
-            train_data , test_data = train_test_split(data , test_size=self.test_ratio , random_state=42)
-
-            train_data.to_csv(TRAIN_FILE_PATH)
-            test_data.to_csv(TEST_FILE_PATH)
-
-            logger.info(f"Train data saved to {TRAIN_FILE_PATH}")
-            logger.info(f"Test data saved to {TEST_FILE_PATH}")
-        
+            logger.info("Starting data splitting process")
+            logger.info(f"Total records: {len(data)}")
+            
+            # Split data into train and test
+            train_data, test_data = train_test_split(
+                data, 
+                train_size=self.train_ratio,
+                test_size=self.test_ratio,
+                random_state=42,
+                shuffle=True
+            )
+            
+            # Save train data
+            train_data.to_csv(TRAIN_FILE_PATH, index=False)
+            logger.info(f"Train data saved to: {TRAIN_FILE_PATH}")
+            logger.info(f"Train records: {len(train_data)} ({self.train_ratio*100}%)")
+            
+            # Save test data
+            test_data.to_csv(TEST_FILE_PATH, index=False)
+            logger.info(f"Test data saved to: {TEST_FILE_PATH}")
+            logger.info(f"Test records: {len(test_data)} ({self.test_ratio*100}%)")
+            
+            logger.info("Data splitting completed successfully")
+            
         except Exception as e:
-            logger.error("Error while splitting data")
-            raise CustomException("Failed to split data into training and test sets ", e)
-        
+            logger.error(f"Error while splitting data: {e}")
+            raise CustomException("Failed to split data into train and test sets", e)
+    
     def run(self):
-
+        """Execute the complete data ingestion pipeline"""
         try:
-            logger.info("Starting data ingestion process")
-
-            self.download_csv_from_gcp()
-            self.split_data()
-
-            logger.info("Data ingestion completed sucesfully")
-        
+            logger.info("=" * 60)
+            logger.info("Starting Data Ingestion Process")
+            logger.info("=" * 60)
+            
+            # Step 1: Load local dataset and save as raw.csv
+            data = self.load_local_dataset()
+            
+            # Step 2: Split into train and test sets
+            self.split_data(data)
+            
+            logger.info("=" * 60)
+            logger.info("Data Ingestion Completed Successfully!")
+            logger.info("=" * 60)
+            logger.info(f"Files created:")
+            logger.info(f"  1. Raw data: {RAW_FILE_PATH}")
+            logger.info(f"  2. Train data: {TRAIN_FILE_PATH}")
+            logger.info(f"  3. Test data: {TEST_FILE_PATH}")
+            logger.info("=" * 60)
+            
         except CustomException as ce:
-            logger.error(f"CustomException : {str(ce)}")
-        
-        finally:
-            logger.info("Data ingestion completed")
+            logger.error(f"CustomException: {str(ce)}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            raise CustomException("Data ingestion failed", e)
 
 if __name__ == "__main__":
     data_ingestion = DataIngestion(read_yaml(CONFIG_PATH))
     data_ingestion.run()
-
-
-
-
-        
-
