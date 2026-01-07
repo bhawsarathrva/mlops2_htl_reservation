@@ -12,7 +12,7 @@ pipeline{
             steps{
                 script{
                     echo 'Cloning Github repo to Jenkins............'
-                    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/data-guru0/MLOPS-COURSE-PROJECT-1.git']])
+                    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github-token', url: 'https://github.com/bhawsarathrva/mlops2_htl_reservation.git']])
                 }
             }
         }
@@ -31,7 +31,7 @@ pipeline{
             }
         }
 
-        stage('Building and Pushing Docker Image to GCR'){
+        stage('Building and Pushing Docker Image to GCR(Google Cloud Registry)'){
             steps{
                 withCredentials([file(credentialsId: 'gcp-key' , variable : 'GOOGLE_APPLICATION_CREDENTIALS')]){
                     script{
