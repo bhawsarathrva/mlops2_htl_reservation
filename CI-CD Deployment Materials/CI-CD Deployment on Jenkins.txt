@@ -142,31 +142,3 @@ docker restart jenkins-dind
 
 REST ALL THINGS ARE EXPLAINED IN VIDEOS ---------------------------------->
 YOU CAN COPY CODE FROM HEREE ..............................
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
