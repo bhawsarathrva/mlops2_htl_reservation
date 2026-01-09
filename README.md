@@ -41,6 +41,9 @@ Hotel reservation cancellations can significantly impact revenue and resource pl
 - **Hyperparameter Tuning** with RandomizedSearchCV
 - **Model Training** with LightGBM Classifier
 - **MLflow Integration** for experiment tracking and model versioning
+  - Local SQLite database (`src/mlflow.db`)
+  - Experiment runs stored in `src/mlruns/`
+  - Web UI for comparing experiments
 
 ### MLOps & DevOps
 - **Dockerized Application** for consistent deployment
@@ -49,12 +52,25 @@ Hotel reservation cancellations can significantly impact revenue and resource pl
 - **Automated Model Training** during container build
 - **Version Control** with Git
 - **Logging & Monitoring** throughout the pipeline
+- **Modular Pipeline Components** (`custom_run/` scripts)
+  - Individual scripts for data ingestion, preprocessing, and training
+  - Enables debugging and testing of specific pipeline stages
 
 ### Web Application
 - **Flask-based Web Interface** for predictions
 - **User-friendly Form** for input data
 - **Real-time Predictions** with trained model
-- **Responsive Design** with custom CSS styling
+- **Modern Responsive Design** with custom CSS styling
+
+### Development Tools
+- **Interactive Helper Script** (`run.bat` for Windows)
+  - Menu-driven interface for common tasks
+  - Quick access to pipeline components
+  - Built-in testing and logging utilities
+  - GCP credentials configuration
+- **Jupyter Notebook** for exploratory data analysis
+- **Comprehensive Logging** with daily log files
+- **Configuration Management** with YAML files
 
 ## 🏗️ Project Architecture
 
@@ -110,13 +126,14 @@ Hotel reservation cancellations can significantly impact revenue and resource pl
 ## 🛠️ Technology Stack
 
 ### Machine Learning & Data Science
-- **Python 3.8+** - Core programming language
+- **Python 3.8-3.12** - Core programming language (tested with 3.12)
 - **Pandas** - Data manipulation and analysis
 - **NumPy** - Numerical computing
 - **Scikit-learn** - Machine learning algorithms and preprocessing
 - **LightGBM** - Gradient boosting framework
 - **Imbalanced-learn** - SMOTE for handling class imbalance
 - **MLflow** - Experiment tracking and model registry
+- **Seaborn** - Statistical data visualization
 
 ### Web Framework
 - **Flask** - Web application framework
@@ -132,97 +149,117 @@ Hotel reservation cancellations can significantly impact revenue and resource pl
 
 ### Development Tools
 - **PyYAML** - Configuration management
-- **Joblib** - Model serialization
+- **Joblib** - Model serialization (via scikit-learn)
 - **Git** - Version control
+- **Jupyter Notebook** - Interactive development and EDA
 
 ## 📁 Project Structure
 
 ```
 Hotel Reservation Prediction/
 │
-├── PROJECT CODE/
-│   ├── src/                          # Source code modules
-│   │   ├── __init__.py
-│   │   ├── data_ingestion.py        # GCP data download & splitting
-│   │   ├── data_preprocessing.py    # Feature engineering & SMOTE
-│   │   ├── model_training.py        # LightGBM training & MLflow
-│   │   ├── logger.py                # Logging configuration
-│   │   └── custom_exception.py      # Custom exception handling
-│   │
-│   ├── pipeline/                     # Training pipeline
-│   │   ├── __init__.py
-│   │   └── training_pipeline.py     # End-to-end training workflow
-│   │
-│   ├── config/                       # Configuration files
-│   │   ├── config.yaml              # Data processing parameters
-│   │   ├── paths_config.py          # File paths configuration
-│   │   └── model_params.py          # Model hyperparameters
-│   │
-│   ├── utils/                        # Utility functions
-│   │   └── common_functions.py      # Helper functions
-│   │
-│   ├── templates/                    # HTML templates
-│   │   └── index.html               # Web interface
-│   │
-│   ├── static/                       # Static files (CSS, JS)
-│   │   └── style.css                # Styling
-│   │
-│   ├── artifacts/                    # Generated artifacts
-│   │   ├── raw/                     # Raw data
-│   │   ├── processed/               # Processed data
-│   │   └── models/                  # Trained models
-│   │
-│   ├── logs/                         # Application logs
-│   │
-│   ├── gcp_credentials/              # GCP service account keys
-│   │
-│   ├── custom_jenkins/               # Jenkins Docker setup
-│   │   └── Dockerfile               # Custom Jenkins image
-│   │
-│   ├── application.py                # Flask web application
-│   ├── Dockerfile                    # Application Docker image
-│   ├── Jenkinsfile                   # CI/CD pipeline definition
-│   ├── requirements.txt              # Python dependencies
-│   ├── setup.py                      # Package setup
-│   └── .gitignore                    # Git ignore rules
+├── src/                              # Source code modules
+│   ├── __init__.py
+│   ├── data_ingestion.py            # GCP data download & splitting
+│   ├── data_preprocessing.py        # Feature engineering & SMOTE
+│   ├── model_training.py            # LightGBM training & MLflow
+│   ├── logger.py                    # Logging configuration
+│   ├── custom_exception.py          # Custom exception handling
+│   ├── mlflow.db                    # MLflow tracking database
+│   └── mlruns/                      # MLflow experiment runs
 │
-├── DATASET/                          # Dataset files
-│   └── Hotel_Reservations.csv
+├── pipeline/                         # Training pipeline
+│   ├── __init__.py
+│   └── training_pipeline.py         # End-to-end training workflow
+│
+├── config/                           # Configuration files
+│   ├── __init__.py
+│   ├── config.yaml                  # Data processing parameters
+│   ├── paths_config.py              # File paths configuration
+│   └── model_params.py              # Model hyperparameters
+│
+├── utils/                            # Utility functions
+│   ├── __init__.py
+│   └── common_functions.py          # Helper functions (read_yaml, etc.)
+│
+├── custom_run/                       # Individual component runners
+│   ├── run_data_ingestion.py       # Standalone data ingestion script
+│   ├── run_data_preprocessing.py   # Standalone preprocessing script
+│   └── run_model_training.py       # Standalone training script
+│
+├── templates/                        # HTML templates
+│   └── index.html                   # Web interface
+│
+├── static/                           # Static files (CSS, JS)
+│   └── style.css                    # Modern responsive styling
+│
+├── artifacts/                        # Generated artifacts
+│   ├── raw/                         # Raw data (train.csv, test.csv)
+│   ├── processed/                   # Processed data
+│   └── models/                      # Trained models (lgbm_model.pkl)
+│
+├── logs/                             # Application logs
+│   └── log_YYYY-MM-DD.log          # Daily log files
+│
+├── gcp_credentials/                  # GCP service account keys
+│   ├── .gitkeep                     # Keep directory in git
+│   ├── credentials_template.json   # Template for credentials structure
+│   └── *.json                       # Actual credentials (gitignored)
+│
+├── notebook/                         # Jupyter notebooks
+│   ├── notebook.ipynb               # EDA and experimentation
+│   └── train.csv                    # Sample data for notebook
+│
+├── DATASET/                          # Original dataset files
+│   └── Hotel Reservations.csv
 │
 ├── CI-CD Deployment Materials/       # Deployment guides
-│   ├── STEPS.md                     # Detailed setup instructions
-│   └── STEPS FOR CI-CD Deployment on Jenkins.txt
+│   └── CI-CD Deployment on Jenkins.txt
 │
-├── NOTES & WORKFLOW.pdf              # Project documentation
+├── PROJECT CODE/                     # Legacy directory
+│   └── custom_jenkins/              # Jenkins Docker setup
+│       └── Dockerfile               # Custom Jenkins with Docker-in-Docker
 │
+├── MLOPS_PROJECT_1.egg-info/        # Package metadata (auto-generated)
+│
+├── htlvenv/                          # Virtual environment (gitignored)
+│
+├── application.py                    # Flask web application
+├── Dockerfile                        # Application Docker image
+├── Jenkinsfile                       # CI/CD pipeline definition
+├── requirements.txt                  # Python dependencies
+├── setup.py                          # Package setup configuration
+├── run.bat                           # Windows helper script for running tasks
+├── .gitignore                        # Git ignore rules
 └── README.md                         # This file
 ```
 
 ## 🚀 Installation
 
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.8 to 3.12 (tested with 3.12)
 - Docker Desktop (for containerization)
 - Google Cloud Platform account (for deployment)
 - Git
+- Jupyter Notebook (optional, for EDA)
 
 ### Local Setup
 
 1. **Clone the Repository**
    ```bash
    git clone <repository-url>
-   cd "Hotel Reservation Prediction/PROJECT CODE"
+   cd "Hotel Reservation Prediction"
    ```
 
 2. **Create Virtual Environment**
    ```bash
-   python -m venv venv
+   python -m venv htlvenv
    
    # Windows
-   venv\Scripts\activate
+   htlvenv\Scripts\activate
    
    # Linux/Mac
-   source venv/bin/activate
+   source htlvenv/bin/activate
    ```
 
 3. **Install Dependencies**
@@ -237,7 +274,7 @@ Hotel Reservation Prediction/
    
    - Create a service account in your GCP project with **Storage Object Viewer** permissions
    - Download the JSON key file from GCP Console
-   - Place it in `PROJECT CODE/gcp_credentials/` directory
+   - Place it in `gcp_credentials/` directory
    - Use `credentials_template.json` as a reference for the required structure
    
    Set the environment variable:
@@ -260,15 +297,47 @@ Hotel Reservation Prediction/
 
 ## 💻 Usage
 
+### Quick Start with run.bat (Windows)
+
+For Windows users, the project includes a convenient helper script:
+
+```bash
+run.bat
+```
+
+This interactive menu provides the following options:
+1. **Run Complete Training Pipeline** - Execute the full end-to-end pipeline
+2. **Run Data Ingestion Only** - Download and split data from GCP
+3. **Run Data Preprocessing Only** - Process and transform data
+4. **Run Model Training Only** - Train the LightGBM model
+5. **Start Web Application** - Launch the Flask web interface
+6. **Test Imports** - Verify all modules are correctly installed
+7. **View Latest Logs** - Display recent log entries
+8. **Set GCP Credentials** - Configure GCP credentials for the session
+9. **Exit** - Close the helper script
+
 ### Training the Model
 
-Run the complete training pipeline:
+**Option 1: Using the helper script (Windows)**
+```bash
+run.bat
+# Select option 1
+```
 
+**Option 2: Direct execution**
 ```bash
 python pipeline/training_pipeline.py
 ```
 
-This will:
+**Option 3: Individual components**
+```bash
+# Run each step separately
+python custom_run/run_data_ingestion.py
+python custom_run/run_data_preprocessing.py
+python custom_run/run_model_training.py
+```
+
+The training pipeline will:
 1. Download data from GCP Storage
 2. Split into train/test sets
 3. Preprocess and engineer features
@@ -280,6 +349,13 @@ This will:
 
 ### Running the Web Application
 
+**Option 1: Using the helper script (Windows)**
+```bash
+run.bat
+# Select option 5
+```
+
+**Option 2: Direct execution**
 ```bash
 python application.py
 ```
@@ -380,6 +456,63 @@ Access the application at: `http://localhost:8080`
 - Saves trained model artifacts
 - Enables experiment comparison
 
+### 4. Modular Execution with custom_run/
+
+The project includes standalone scripts for running individual pipeline components:
+
+**`custom_run/run_data_ingestion.py`**
+- Downloads data from GCP Storage
+- Performs train-test split
+- Saves raw data to artifacts directory
+- Useful for testing data ingestion independently
+
+**`custom_run/run_data_preprocessing.py`**
+- Loads raw data from artifacts
+- Applies preprocessing transformations
+- Handles class imbalance with SMOTE
+- Performs feature selection
+- Saves processed data
+
+**`custom_run/run_model_training.py`**
+- Loads processed data
+- Trains LightGBM model with hyperparameter tuning
+- Logs experiments to MLflow
+- Saves trained model to artifacts
+
+These scripts allow you to:
+- Debug individual pipeline stages
+- Re-run specific components without full pipeline execution
+- Test changes to individual modules
+- Develop and iterate faster
+
+### 5. MLflow Experiment Tracking
+
+The project uses MLflow for comprehensive experiment tracking:
+
+**MLflow Database:** `src/mlflow.db`  
+**Experiment Runs:** `src/mlruns/`
+
+**Tracked Information:**
+- Model hyperparameters
+- Training and validation metrics
+- Dataset versions
+- Model artifacts
+- Run timestamps and duration
+
+**View MLflow UI:**
+```bash
+cd src
+mlflow ui
+```
+Access at: `http://localhost:5000`
+
+This allows you to:
+- Compare different model runs
+- Analyze hyperparameter impact
+- Track model performance over time
+- Reproduce experiments
+- Select the best performing model
+
 ## 🚢 CI/CD Deployment
 
 ### Jenkins Pipeline Stages
@@ -420,13 +553,17 @@ The `Jenkinsfile` defines a 4-stage CI/CD pipeline:
 ### Docker Configuration
 
 **Dockerfile Highlights:**
-- Base image: `python:slim`
+- Base image: `python:3.12-slim`
+- Environment variables:
+  - `PYTHONDONTWRITEBYTECODE=1` - Prevents Python from writing .pyc files
+  - `PYTHONUNBUFFERED=1` - Ensures logs are displayed in real-time
 - Installs LightGBM system dependencies (`libgomp1`)
-- Copies application code
-- Installs Python packages
-- **Trains model during build** (ensures fresh model)
+- Copies application code and requirements
+- Installs Python packages with pip caching disabled for smaller image size
+- Installs project in editable mode (`pip install -e .`)
+- **Trains model during build** (ensures fresh model in container)
 - Exposes port 8080
-- Runs Flask application
+- Runs Flask application with `python application.py`
 
 ### Setting Up Jenkins
 
@@ -562,25 +699,46 @@ Centralizes all file paths for data, models, and artifacts.
 1. **GCP Authentication Error**
    - Ensure `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set
    - Verify service account has Storage Object Viewer permissions
+   - Check that the credentials JSON file exists in `gcp_credentials/`
 
 2. **Module Import Errors**
    - Run `pip install -e .` to install package in editable mode
-   - Ensure virtual environment is activated
+   - Ensure virtual environment is activated (`htlvenv`)
+   - Verify you're in the project root directory
 
 3. **Docker Build Failures**
    - Check Docker Desktop is running
    - Verify Dockerfile syntax
    - Ensure sufficient disk space
+   - Clear Docker cache: `docker system prune -a`
 
 4. **Model Training Errors**
    - Verify data is downloaded to `artifacts/raw/`
-   - Check GCP bucket name and file name in config
-   - Ensure sufficient memory for SMOTE operation
+   - Check GCP bucket name and file name in `config/config.yaml`
+   - Ensure sufficient memory for SMOTE operation (at least 4GB RAM recommended)
+   - Check logs in `logs/` directory for detailed error messages
 
 5. **Jenkins Pipeline Failures**
    - Verify GCP credentials are configured in Jenkins
    - Check Docker permissions for Jenkins user
    - Ensure Google Cloud SDK is installed in Jenkins container
+   - Review Jenkins console output for specific errors
+
+6. **run.bat Helper Script Issues (Windows)**
+   - Ensure you're running from the project root directory
+   - Verify Python is in your system PATH
+   - Check that all required files exist (pipeline/, custom_run/, etc.)
+   - If GCP credentials option fails, manually set the environment variable
+
+7. **MLflow UI Not Starting**
+   - Navigate to `src/` directory before running `mlflow ui`
+   - Check if port 5000 is already in use
+   - Verify `mlflow.db` exists in the `src/` directory
+
+8. **Flask Application Port Conflict**
+   - If port 8080 is in use, modify `application.py` to use a different port
+   - Check for other applications using port 8080
+   - Use `netstat -ano | findstr :8080` (Windows) to identify the process
 
 ## 📝 Logging
 
