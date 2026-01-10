@@ -166,7 +166,6 @@ Hotel Reservation Prediction/
 │   ├── logger.py                    # Logging configuration
 │   ├── custom_exception.py          # Custom exception handling
 │   ├── mlflow.db                    # MLflow tracking database
-│   └── mlruns/                      # MLflow experiment runs
 │
 ├── pipeline/                         # Training pipeline
 │   ├── __init__.py
@@ -219,8 +218,6 @@ Hotel Reservation Prediction/
 ├── PROJECT CODE/                     # Legacy directory
 │   └── custom_jenkins/              # Jenkins Docker setup
 │       └── Dockerfile               # Custom Jenkins with Docker-in-Docker
-│
-├── MLOPS_PROJECT_1.egg-info/        # Package metadata (auto-generated)
 │
 ├── htlvenv/                          # Virtual environment (gitignored)
 │
